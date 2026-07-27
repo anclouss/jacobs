@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jacob's Exchange</title>
+<style>
+body{margin:0;background:#0b1120;color:#fff;font-family:Arial,sans-serif;padding:20px}
+.card{max-width:500px;margin:auto;background:#172033;padding:25px;border-radius:20px}
+h1{text-align:center;color:#A4E5E0}
+label{display:block;margin-top:15px;color:#94a3b8}
+input{width:100%;padding:12px;margin-top:5px;border-radius:10px;border:0;background:#263449;color:#fff;font-size:18px;box-sizing:border-box}
+button{width:100%;margin-top:15px;padding:13px;border:0;border-radius:10px;background:#A4E5E0;font-size:16px}
+.result{margin-top:20px;background:#0f172a;padding:15px;border-radius:15px}
+.row{display:flex;justify-content:space-between;margin:10px 0}
+.green{color:#22c55e}.gold{color:#facc15}.blue{color:#38bdf8}
+.deal{background:#263449;padding:10px;border-radius:10px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Jacob's Exchange</h1>
+
+<label>CNY</label><input id="cny" value="2000" type="number">
+<label>USDT/RUB</label><input id="usdt" value="80" type="number" step="0.01">
+<label>Ваш курс CNY</label><input id="sell" value="12.5" type="number" step="0.01">
+
+<label>🎯 Хочу заработать ₽</label><input id="target" value="1000" type="number">
+<button onclick="setRecommended()">🎯 Поставить рекомендуемый курс</button>
+
+<div class="result">
+<div class="row"><span>Себестоимость CNY</span><b id="market" class="blue"></b></div>
+<div class="row"><span>Клиент платит</span><b id="rub"></b></div>
+<div class="row"><span>USDT куплено</span><b id="bought"></b></div>
+<div class="row"><span>USDT нужно</span><b id="need"></b></div>
+<hr>
+<div class="row"><span>Остаток USDT</span><b id="left" class="green"></b></div>
+<div class="row"><span>Остаток ₽</span><b id="leftRub" class="green"></b></div>
+<div class="row"><span>Прибыль</span><b id="profit" class="gold"></b></div>
+<div class="row"><span>Маржа</span><b id="margin" class="gold"></b></div>
+</div>
+
+<button onclick="copyRub()">📋 Копировать сумму</button>
+
+<div class="result">
+<h3>📜 История</h3>
+<div id="history"></div>
+</div>
+</div>
+
+<script>
+function calc(){
+let c=+cny.value,u=+usdt.value,s=+sell.value;
+let market=u/6.6;
+let rub=c*s;
+let bought=rub/u;
+let need=c/6.6;
+let left=bought-need;
+let profit=(s-market)*c;
+marketEl=market;
+document.getElementById('market').innerText=market.toFixed(4)+" ₽";
+document.getElementById('rub').innerText=rub.toFixed(2)+" ₽";
+document.getElementById('bought').innerText=bought.toFixed(6)+" USDT";
+document.getElementById('need').innerText=need.toFixed(6)+" USDT";
+document.getElementById('left').innerText=left.toFixed(6)+" USDT";
+document.getElementById('leftRub').innerText=(left*u).toFixed(2)+" ₽";
+document.getElementById('profit').innerText=profit.toFixed(2)+" ₽";
+document.getElementById('margin').innerText=((s-market)/market*100).toFixed(2)+"%";
+}
+function setRecommended(){sell.value=(usdt.value/6.6+target.value/cny.value).toFixed(4);calc()}
+async function getBybitP2P(){alert("Для прямого Bybit P2P в браузере нужен прокси из-за CORS. Поле курса оставлено ручным.");}
+function saveDeal(){
+let h=JSON.parse(localStorage.deals||"[]");
+h.unshift({d:new Date().toLocaleString(),c:cny.value,r:rub.innerText,p:profit.innerText});
+localStorage.deals=JSON.stringify(h);show();
+}
+function show(){let h=JSON.parse(localStorage.deals||"[]");history.innerHTML=h.map((x,i)=>`<div class="deal">${x.d}<br>${x.c} CNY<br>${x.r}<br>Прибыль ${x.p}<br><button onclick="del(${i})">Удалить</button></div>`).join("")||"Нет сделок"}
+function del(i){let h=JSON.parse(localStorage.deals||"[]");h.splice(i,1);localStorage.deals=JSON.stringify(h);show()}
+function copyRub(){navigator.clipboard.writeText(rub.innerText);alert("Скопировано")}
+document.querySelectorAll("input").forEach(x=>x.oninput=calc);
+calc();show();
+</script>
+</body>
+</html>
